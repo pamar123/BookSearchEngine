@@ -1,15 +1,16 @@
 export const productionConfig = {
-    // Allowed origins for CORS
-    allowedOrigins: [
-      'https://your-render-frontend-url.onrender.com',
-      'https://your-render-backend-url.onrender.com'
-    ],
-    
-    // MongoDB config
-    mongoDbConfig: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      retryWrites: true,
-      w: 'majority'
-    }
-  };
+  allowedOrigins: [
+    process.env.RENDER_EXTERNAL_URL || 'https://book-search-engine.onrender.com'
+  ],
+  
+  mongoDbConfig: {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    retryWrites: true,
+    w: 'majority'
+  },
+  
+  staticPaths: {
+    client: '../../client/dist'
+  }
+};

@@ -1,16 +1,22 @@
 #!/bin/bash
 
-# Install root dependencies
+# Install dependencies
 npm install
 
-# Install and build client
+# Build client
 cd client
 npm install --include=dev
 npm run build
 
-# Install and build server
+# Build server
 cd ../server
 npm install --include=dev
 npm run build
+
+# Create a directory for client build in server
+mkdir -p dist/client
+
+# Copy client build to server's dist directory
+cp -r ../client/dist/* dist/client/
 
 cd ..

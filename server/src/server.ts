@@ -21,6 +21,9 @@ const httpServer = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 const isProd = process.env.NODE_ENV === 'production';
 
+// Resolve client build directory
+const clientBuildPath = path.resolve(__dirname, '../../client/dist');
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -53,18 +56,21 @@ const startApolloServer = async () => {
   );
 
   if (isProd) {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
+    // Verify client build directory exists
+    console.log('Client build path:', clientBuildPath);
+    
+    app.use(express.static(clientBuildPath));
 
     app.get('*', (req: Request, res: Response) => {
-      res.sendFile(
-        path.join(__dirname, '../client/dist/index.html'),
-        (err: Error | null) => {
-          if (err) {
-            console.error('Error sending file:', err);
-            res.status(500).send('Error loading application');
-          }
+      const indexPath = path.join(clientBuildPath, 'index.html');
+      console.log('Serving index.html from:', indexPath);
+      
+      res.sendFile(indexPath, (err: Error | null) => {
+        if (err) {
+          console.error('Error sending file:', err);
+          res.status(500).send('Error loading application');
         }
-      );
+      });
     });
   }
 
