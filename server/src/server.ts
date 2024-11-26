@@ -29,7 +29,6 @@ const startApolloServer = async () => {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
-  // Configure CORS based on environment
   const corsOptions = isProd 
     ? {
         origin: productionConfig.allowedOrigins,
@@ -52,12 +51,15 @@ const startApolloServer = async () => {
     app.use(express.static(path.join(__dirname, '../../client/dist')));
 
     app.get('*', (req: Request, res: Response) => {
-      res.sendFile(path.join(__dirname, '../../client/dist/index.html'), (err) => {
-        if (err) {
-          console.error('Error sending file:', err);
-          res.status(500).send('Error loading application');
+      res.sendFile(
+        path.join(__dirname, '../../client/dist/index.html'),
+        (err: Error | null) => {
+          if (err) {
+            console.error('Error sending file:', err);
+            res.status(500).send('Error loading application');
+          }
         }
-      });
+      );
     });
   }
 
