@@ -1,34 +1,26 @@
 import express from 'express';
+import type { Request, Response } from 'express-serve-static-core';
 import path from 'path';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import http from 'http';
 import cors from 'cors';
+import { productionConfig } from './config/production.js';
 import db from './config/connection.js';
 import { typeDefs, resolvers } from './schemas/index.js';
 import { authMiddleware } from './utils/auth.js';
-import type { RequestHandler, Request, Response, NextFunction } from 'express-serve-static-core';
 
 const app = express();
 const httpServer = http.createServer(app);
 const PORT = process.env.PORT || 3001;
+const isProd = process.env.NODE_ENV === 'production';
 
-// Create Apollo Server
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  includeStacktraceInErrorResponses: true,
-  formatError: (formattedError, error) => {
-    console.error('GraphQL Error:', {
-      message: formattedError.message,
-      locations: formattedError.locations,
-      path: formattedError.path,
-      extensions: formattedError.extensions,
-    });
-    return formattedError;
-  },
+  includeStacktraceInErrorResponses: !isProd,
 });
 
 const startApolloServer = async () => {
@@ -37,16 +29,37 @@ const startApolloServer = async () => {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
+  // Configure CORS based on environment
+  const corsOptions = isProd 
+    ? {
+        origin: productionConfig.allowedOrigins,
+        credentials: true
+      }
+    : {
+        origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+        credentials: true
+      };
+
   app.use(
     '/graphql',
-    cors<cors.CorsRequest>({
-      origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
-      credentials: true,
-    }),
+    cors<cors.CorsRequest>(corsOptions),
     expressMiddleware(server, {
       context: authMiddleware
     })
   );
+
+  if (isProd) {
+    app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+    app.get('*', (req: Request, res: Response) => {
+      res.sendFile(path.join(__dirname, '../../client/dist/index.html'), (err) => {
+        if (err) {
+          console.error('Error sending file:', err);
+          res.status(500).send('Error loading application');
+        }
+      });
+    });
+  }
 
   db.once('open', () => {
     httpServer.listen(PORT, () => {
