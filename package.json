@@ -1,10 +1,10 @@
 {
   "name": "book-search-engine",
   "version": "1.0.0",
-  "description": "",
+  "type": "module",
   "main": "server/dist/server.js",
   "scripts": {
-    "start": "node server/dist/server.js",
+    "start": "cd server && npm start",
     "develop": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\"",
     "install": "cd server && npm i && cd ../client && npm i",
     "build": "cd server && npm run build && cd ../client && npm run build",
